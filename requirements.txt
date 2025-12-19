@@ -1,0 +1,7 @@
+anthropic>=0.39.0
+yfinance>=0.2.32
+python-dotenv>=1.0.0
+finnhub-python>=2.4.20
+psycopg2-binary>=2.9.9
+redis>=5.0.0
+pytest>=8.0.0
