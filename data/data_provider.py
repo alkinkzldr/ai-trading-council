@@ -6,6 +6,7 @@ import logging
 from typing import Dict, List, Callable, Any
 from collections import deque
 from dotenv import load_dotenv
+import yfinance as yf
 
 from data.cache_manager import CacheManager
 from config.settings import CACHE_TTL, RATE_LIMIT_PER_MINUTE
@@ -67,7 +68,7 @@ class DataProvider:
     ###### Always fresh data methods ######
     #######################################
 
-    def fetch_price(self, symbol: str) -> Dict:
+    def get_price(self, symbol: str) -> Dict:
         """Get full price quote. NO CACHE - always fresh."""
         symbol = self._validate_symbol(symbol)
         self.logger.info(f"Fetching price for {symbol}")
@@ -81,7 +82,7 @@ class DataProvider:
             self._handle_api_error(e, 'quote', symbol)
             raise
 
-    def fetch_current_price(self, symbol: str) -> float:
+    def get_current_price(self, symbol: str) -> float:
         """Get current price only. NO CACHE - always fresh."""
         symbol = self._validate_symbol(symbol)
         self.logger.info(f"Fetching current price for {symbol}")
@@ -187,6 +188,31 @@ class DataProvider:
             ttl=self.cache_ttl['earnings']
         )
 
+    #TODO: Cache for 30 days
+    def historical_30_data(self, symbol: str) -> Dict:
+        """Fetch historical 30 days data for a given symbol.
+
+        Args:
+            symbol (str): The stock symbol to fetch data for.
+
+        Returns:
+            Dict: A dictionary containing the historical data.
+        """
+        if symbol:
+            symbol = self._validate_symbol(symbol)
+            cache_key = f"finnhub:historical_30d:{symbol}"
+        else:
+            raise ValueError("Symbol must be provided for historical data.")
+        
+        self._check_rate_limit()
+        try:
+            ticker = yf.Ticker(symbol)
+            history_price = ticker.history(period="30d")
+            return history_price
+        except Exception as e:
+            self._handle_api_error(e, 'historical_30_data', symbol)
+            raise
+
     #######################################
     ###### 1 week cache #################
     #######################################
@@ -251,6 +277,29 @@ class DataProvider:
     ########################################
     ###### Helper methods #################
     ########################################
+
+    def get_all_market_symbols(self) -> List[str]:
+        """Fetch all available stock symbols from Finnhub."""
+        all_markets = [
+            "AD", "AS", "AT", "AX", "BA", "BC", "BD", "BE", "BH", "BK",
+            "BO", "BR", "CA", "CN", "CO", "CR", "CS", "DB", "DE", "DU",
+            "F", "HE", "HK", "HM", "IC", "IR", "IS", "JK", "JO", "KL",
+            "KQ", "KS", "KW", "L", "LS", "MC", "ME", "MI", "MT", "MU",
+            "MX", "NE", "NL", "NS", "NZ", "OL", "OM", "PA", "PM", "PR",
+            "QA", "RG", "RO", "SA", "SG", "SI", "SN", "SR", "SS", "ST",
+            "SW", "SZ", "T", "TA", "TL", "TO", "TW", "TWO", "US", "V",
+            "VI", "VN", "VS", "WA", "HA", "SX", "TG", "SC"
+        ]
+        free_markets = ["US"]
+        all_symbols = []
+        for market in free_markets:
+            try:
+                symbols = self.finnhub_client.stock_symbols(market)
+                all_symbols.extend([s['symbol'] for s in symbols])
+            except Exception as e:
+                self.logger.warning(f"Failed to fetch symbols for market {market}: {e}")
+        return all_symbols
+
 
     def _fetch_with_cache(self, cache_key: str, fetch_func: Callable, ttl: int) -> Any:
         """
