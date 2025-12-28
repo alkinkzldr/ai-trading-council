@@ -2,6 +2,7 @@ from enum import Enum
 from dataclasses import dataclass
 import sys
 from pathlib import Path
+import pandas as pd
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
@@ -22,11 +23,7 @@ class MarketRegime(Enum):
 @dataclass
 class RegimeGuardian:
 
-
-    def __init__(self):
-        pass
-
-    def classify_regime(self) -> Enum:
+    def classify_regime(self, symbol) -> Enum:
         """Classify the market regime based on the provided data.
         CONDITIONS:
         - BULL_TREND: Sustained upward movement in prices, higher highs and higher lows.
@@ -43,10 +40,30 @@ class RegimeGuardian:
             Enum: The classified market regime.
         """
         mc = market_calculator.MarketCalculator()
-        if market is None:
-            raise ValueError("Market data is required for regime classification.")
+        data = mc.fetch_market(symbol)
         
-        return regime
+        if data.get("vix") > 30:
+            regime = "VOLATILITY_SPIKE"
+        elif data.
+
+
 
     def should_veto() -> bool:
         pass
+
+
+
+
+
+if __name__ == "__main__":
+    mc = market_calculator.MarketCalculator()
+    dp = data_provider.DataProvider()
+    # bec of 60 api call limit, test 20 random symbols
+    symbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "FB", "BRK.B", "JNJ", "V", "WMT",
+               "JPM", "MA", "PG", "UNH", "NVDA", "HD", "DIS", "PYPL", "BAC", "VZ"] 
+    results = mc.fetch_market("AMZN")
+    df = pd.DataFrame([results])
+    df.to_csv("results.csv", index=True)
+
+    
+    print("Market data fetched successfully.")
