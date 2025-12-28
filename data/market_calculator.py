@@ -76,6 +76,7 @@ class MarketCalculator:
             "macd_recommendation": macd_condition[0],
             "macd_confidence": macd_condition[1],
             "macd_message": macd_condition[2],
+            "macd_result": macd_condition[3],
             "bb_upper": bollinger_bands[0],
             "bb_lower": bollinger_bands[1],
             "bb_middle": bollinger_bands[2],
@@ -416,6 +417,11 @@ class MarketCalculator:
         signal = macd_data["signal"]
         histogram = macd_data["histogram"]
 
+        # 0: strong bullish
+        # 1: bullish
+        # 2: strong bearish
+        # 3: bearish
+        # 4: no clear signal
         # Check crossover
         if macd > signal and histogram > 0:
             if histogram > 0.5:  # Strong momentum
@@ -423,9 +429,10 @@ class MarketCalculator:
                     "STRONG_BUY",
                     0.85,
                     f"Bullish crossover with strong momentum (hist={histogram:.2f})",
+                    0,
                 )
             else:
-                return "BUY", 0.70, f"Bullish crossover (hist={histogram:.2f})"
+                return "BUY", 0.70, f"Bullish crossover (hist={histogram:.2f})", 1 
 
         elif macd < signal and histogram < 0:
             if histogram < -0.5:  # Strong bearish
@@ -433,17 +440,18 @@ class MarketCalculator:
                     "STRONG_SELL",
                     0.85,
                     f"Bearish crossover with strong momentum (hist={histogram:.2f})",
+                    2,
                 )
             else:
-                return "SELL", 0.70, f"Bearish crossover (hist={histogram:.2f})"
+                return "SELL", 0.70, f"Bearish crossover (hist={histogram:.2f})", 3
 
         # MACD above zero = uptrend bias
         elif macd > 0:
-            return "HOLD", 0.55, "Uptrend but no clear signal"
+            return "HOLD", 0.55, "Uptrend but no clear signal", 4
 
         # MACD below zero = downtrend bias
         else:
-            return "HOLD", 0.45, "Downtrend but no clear signal"
+            return "HOLD", 0.45, "Downtrend but no clear signal", 4
 
     def check_rsi_condition(self, rsi: float) -> str:
         """Define RSI condition

@@ -1,0 +1,23 @@
+# Symbols that we can use for now
+symbols = [
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "AMZN",
+    "TSLA",
+    "FB",
+    "BRK.B",
+    "JNJ",
+    "V",
+    "WMT",
+    "JPM",
+    "MA",
+    "PG",
+    "UNH",
+    "NVDA",
+    "HD",
+    "DIS",
+    "PYPL",
+    "BAC",
+    "VZ",
+]
